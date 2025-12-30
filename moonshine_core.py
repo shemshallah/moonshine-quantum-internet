@@ -11,7 +11,7 @@ Contains:
 - MoonshineLattice: Full lattice management
 - QuantumAlgorithms: All quantum algorithms
 - ValidationSuite: Comprehensive testing
-- RoutingProofs: σ/j-invariant verification
+- RoutingProofs: /j-invariant verification
 
 USAGE:
     from moonshine_core import MoonshineLattice, QuantumAlgorithms
@@ -49,7 +49,7 @@ except ImportError:
 
 @dataclass
 class RoutingProof:
-    """Proof of quantum operation via σ/j-invariant routing"""
+    """Proof of quantum operation via /j-invariant routing"""
     timestamp: float
     pseudoqubit_id: int
     sigma: float
@@ -58,8 +58,8 @@ class RoutingProof:
     quantum_state: np.ndarray
     
     def __str__(self):
-        return (f"Route[{self.pseudoqubit_id:>6}]: σ={self.sigma:6.4f} "
-                f"j={self.j_invariant.real:8.1f} → {self.operation}")
+        return (f"Route[{self.pseudoqubit_id:>6}]: ={self.sigma:6.4f} "
+                f"j={self.j_invariant.real:8.1f}  {self.operation}")
     
     def to_dict(self):
         """Convert to JSON-serializable dict"""
@@ -112,20 +112,20 @@ class MoonshinePseudoqubit:
     Quantum state carrier on Moonshine lattice node
     
     Each pseudoqubit:
-    - Lives at a specific σ-coordinate in [0, 8)
+    - Lives at a specific -coordinate in [0, 8)
     - Has j-invariant encoding quantum phase
     - Maintains quantum state (amplitude_x, amplitude_y)
-    - Supports quantum operations via σ/j routing
+    - Supports quantum operations via /j routing
     """
     
     def __init__(self, index: int, sigma: float, j_invariant: complex):
         self.index = index
-        self.sigma = sigma  # σ-coordinate
+        self.sigma = sigma  # -coordinate
         self.j_invariant = j_invariant  # j-function value
         
-        # Quantum state |ψ⟩ = α|0⟩ + β|1⟩
-        self.amplitude_x = 1.0  # α (|0⟩ component)
-        self.amplitude_y = 0.0  # β (|1⟩ component)
+        # Quantum state | = |0 + |1
+        self.amplitude_x = 1.0  #  (|0 component)
+        self.amplitude_y = 0.0  #  (|1 component)
         self.phase = 0.0  # Global phase
         
     def to_statevector(self) -> np.ndarray:
@@ -148,27 +148,27 @@ class MoonshinePseudoqubit:
         return 0 if np.random.random() < p0 else 1
     
     def apply_hadamard(self):
-        """Apply Hadamard gate: H|ψ⟩"""
+        """Apply Hadamard gate: H|"""
         new_x = (self.amplitude_x + self.amplitude_y) / np.sqrt(2)
         new_y = (self.amplitude_x - self.amplitude_y) / np.sqrt(2)
         self.amplitude_x = new_x
         self.amplitude_y = new_y
     
     def apply_pauli_x(self):
-        """Apply Pauli-X gate (NOT): X|ψ⟩"""
+        """Apply Pauli-X gate (NOT): X|"""
         self.amplitude_x, self.amplitude_y = self.amplitude_y, self.amplitude_x
     
     def apply_pauli_z(self):
-        """Apply Pauli-Z gate: Z|ψ⟩"""
+        """Apply Pauli-Z gate: Z|"""
         self.amplitude_y = -self.amplitude_y
     
     def apply_rotation(self, angle: float, axis: str = 'Y'):
         """
-        Apply rotation gate using σ-dependent angle
+        Apply rotation gate using -dependent angle
         
-        σ-coordinate modulates rotation for geometric routing
+        -coordinate modulates rotation for geometric routing
         """
-        # σ-dependent rotation (geometric quantum gate)
+        # -dependent rotation (geometric quantum gate)
         effective_angle = angle * (1.0 + 0.1 * np.sin(self.sigma * np.pi / 4))
         
         if axis.upper() == 'Y':
@@ -214,7 +214,7 @@ class MoonshinePseudoqubit:
         )
     
     def reset(self):
-        """Reset to |0⟩ state"""
+        """Reset to |0 state"""
         self.amplitude_x = 1.0
         self.amplitude_y = 0.0
         self.phase = 0.0
@@ -259,18 +259,18 @@ class MoonshineLattice:
                 pq = MoonshinePseudoqubit(triangle_id, sigma, complex(j_real, j_imag))
                 self.pseudoqubits[triangle_id] = pq
             
-            self.logger.info(f"✓ Loaded {len(self.pseudoqubits):,} pseudoqubits")
+            self.logger.info(f" Loaded {len(self.pseudoqubits):,} pseudoqubits")
             
-            # Validate σ distribution
+            # Validate  distribution
             sigmas = [pq.sigma for pq in self.pseudoqubits.values()]
-            self.logger.info(f"  σ-range: [{min(sigmas):.4f}, {max(sigmas):.4f}]")
-            self.logger.info(f"  σ-mean: {np.mean(sigmas):.4f}")
+            self.logger.info(f"  -range: [{min(sigmas):.4f}, {max(sigmas):.4f}]")
+            self.logger.info(f"  -mean: {np.mean(sigmas):.4f}")
             
             # Check if full dimension
             if len(self.pseudoqubits) == self.DIMENSION:
-                self.logger.info(f"  ✅ FULL MOONSHINE DIMENSION: {self.DIMENSION:,} nodes")
+                self.logger.info(f"   FULL MOONSHINE DIMENSION: {self.DIMENSION:,} nodes")
             else:
-                self.logger.warning(f"  ⚠️ Partial lattice: {len(self.pseudoqubits):,}/{self.DIMENSION:,}")
+                self.logger.warning(f"   Partial lattice: {len(self.pseudoqubits):,}/{self.DIMENSION:,}")
             
             return True
             
@@ -292,7 +292,7 @@ class MoonshineLattice:
             
             self.pseudoqubits[i] = MoonshinePseudoqubit(i, sigma, j)
         
-        self.logger.info(f"✓ Created {count:,} pseudoqubits")
+        self.logger.info(f" Created {count:,} pseudoqubits")
     
     def get_qubit(self, index: int) -> Optional[MoonshinePseudoqubit]:
         """Get pseudoqubit by index"""
@@ -312,7 +312,7 @@ class MoonshineLattice:
         return None
     
     def reset_all(self):
-        """Reset all qubits to |0⟩"""
+        """Reset all qubits to |0"""
         for pq in self.pseudoqubits.values():
             pq.reset()
         self.routing_history.clear()
@@ -342,7 +342,7 @@ class QuantumAlgorithms:
     """
     Complete quantum algorithm suite for Moonshine lattice
     
-    All algorithms use σ/j-invariant routing for operations
+    All algorithms use /j-invariant routing for operations
     Generates routing proofs for verification
     """
     
@@ -369,7 +369,7 @@ class QuantumAlgorithms:
         classical_queries = 2**(n_qubits - 1) + 1
         
         # Initialize qubits in superposition
-        self.logger.info(f"📊 Creating superposition...")
+        self.logger.info(f" Creating superposition...")
         for i in range(n_qubits):
             pq = self.lattice.get_qubit(i)
             if not pq:
@@ -385,10 +385,10 @@ class QuantumAlgorithms:
                 self.logger.info(f"  ... ({n_qubits - 7} more) ...")
         
         # Oracle (constant function for demo)
-        self.logger.info(f"🔍 Oracle: 1 quantum query for {2**n_qubits:,} states")
+        self.logger.info(f" Oracle: 1 quantum query for {2**n_qubits:,} states")
         
         # Measure
-        self.logger.info(f"📏 Measuring...")
+        self.logger.info(f" Measuring...")
         measurements = []
         for i in range(n_qubits):
             pq = self.lattice.get_qubit(i)
@@ -401,7 +401,7 @@ class QuantumAlgorithms:
         elapsed = time.time() - start_time
         speedup = classical_queries / 1.0
         
-        self.logger.info(f"\n✅ Oracle: {'BALANCED' if balanced else 'CONSTANT'}")
+        self.logger.info(f"\n Oracle: {'BALANCED' if balanced else 'CONSTANT'}")
         self.logger.info(f"   Speedup: {speedup:,.0f}x")
         
         result = AlgorithmResult(
@@ -425,7 +425,7 @@ class QuantumAlgorithms:
         """
         Grover's search algorithm
         
-        Quantum advantage: O(√N) vs O(N) classical
+        Quantum advantage: O(N) vs O(N) classical
         """
         search_space = 2**n_qubits
         n_iterations = int(np.pi / 4 * np.sqrt(search_space))
@@ -439,15 +439,15 @@ class QuantumAlgorithms:
         routing_proofs = []
         
         # Initialize superposition
-        self.logger.info(f"📊 Superposition over {search_space:,} states...")
+        self.logger.info(f" Superposition over {search_space:,} states...")
         for i in range(n_qubits):
             pq = self.lattice.get_qubit(i)
             if pq:
                 pq.apply_hadamard()
                 self.lattice.record_routing(i, "Superposition")
         
-        # Grover iterations with σ-routing
-        self.logger.info(f"🔄 {n_iterations} Grover iterations with σ-routing...")
+        # Grover iterations with -routing
+        self.logger.info(f" {n_iterations} Grover iterations with -routing...")
         for iteration in range(n_iterations):
             for i in range(n_qubits):
                 pq = self.lattice.get_qubit(i)
@@ -456,7 +456,7 @@ class QuantumAlgorithms:
                     pq.apply_rotation(angle)
                     
                     if iteration < 2 and i < 3:
-                        proof = self.lattice.record_routing(i, f"σ-diffusion iter {iteration}")
+                        proof = self.lattice.record_routing(i, f"-diffusion iter {iteration}")
                         routing_proofs.append(proof)
                         if iteration == 0:
                             self.logger.info(f"  {proof}")
@@ -476,14 +476,14 @@ class QuantumAlgorithms:
         elapsed = time.time() - start_time
         speedup = (search_space / 2) / n_iterations
         
-        self.logger.info(f"\n✅ Found: {found_index}")
+        self.logger.info(f"\n Found: {found_index}")
         self.logger.info(f"   Speedup: {speedup:.1f}x")
         
         result = AlgorithmResult(
             algorithm="Grover Search",
             qubits_used=n_qubits,
             classical_complexity=f"O({search_space:,})",
-            quantum_complexity=f"O(√{search_space:,}) = {n_iterations}",
+            quantum_complexity=f"O({search_space:,}) = {n_iterations}",
             speedup_factor=speedup,
             lattice_size=len(self.lattice.pseudoqubits),
             execution_time=elapsed,
@@ -512,7 +512,7 @@ class QuantumAlgorithms:
         routing_proofs = []
         created = 0
         
-        self.logger.info(f"📊 Creating W-states...")
+        self.logger.info(f" Creating W-states...")
         
         batch_size = 1000
         for batch_start in range(0, n_triangles, batch_size):
@@ -528,7 +528,7 @@ class QuantumAlgorithms:
                 pq3 = self.lattice.get_qubit(idx + 2)
                 
                 if pq1 and pq2 and pq3:
-                    # W-state: |W⟩ = (|100⟩ + |010⟩ + |001⟩)/√3
+                    # W-state: |W = (|100 + |010 + |001)/3
                     norm = 1.0 / np.sqrt(3.0)
                     pq1.amplitude_x = norm
                     pq2.amplitude_x = norm
@@ -548,9 +548,9 @@ class QuantumAlgorithms:
         
         elapsed = time.time() - start_time
         
-        self.logger.info(f"\n✅ Created: {created:,} W-states")
+        self.logger.info(f"\n Created: {created:,} W-states")
         self.logger.info(f"   Entangled qubits: {created * 3:,}")
-        self.logger.info(f"   Speedup: ∞ (classically impossible)")
+        self.logger.info(f"   Speedup:  (classically impossible)")
         
         result = AlgorithmResult(
             algorithm="W-State Entanglement",
@@ -581,10 +581,10 @@ class QuantumAlgorithms:
         start_time = time.time()
         routing_proofs = []
         
-        target_phase = 0.25  # π/2
+        target_phase = 0.25  # /2
         
-        # QFT using σ/j-invariants
-        self.logger.info(f"📊 Quantum Fourier Transform...")
+        # QFT using /j-invariants
+        self.logger.info(f" Quantum Fourier Transform...")
         for i in range(precision):
             pq = self.lattice.get_qubit(i)
             if pq:
@@ -610,7 +610,7 @@ class QuantumAlgorithms:
         error = abs(measured_phase - target_phase)
         speedup = 2**precision / precision
         
-        self.logger.info(f"\n✅ Phase: {measured_phase:.6f} (target: {target_phase:.6f})")
+        self.logger.info(f"\n Phase: {measured_phase:.6f} (target: {target_phase:.6f})")
         self.logger.info(f"   Error: {error:.6f}")
         self.logger.info(f"   Speedup: {speedup:.0f}x")
         
@@ -645,7 +645,7 @@ class QuantumAlgorithms:
         start_time = time.time()
         routing_proofs = []
         
-        self.logger.info(f"📊 Initializing superposition...")
+        self.logger.info(f" Initializing superposition...")
         
         batch_size = 5000
         for batch_start in range(0, n_qubits, batch_size):
@@ -666,7 +666,7 @@ class QuantumAlgorithms:
         
         elapsed = time.time() - start_time
         
-        self.logger.info(f"\n✅ {n_qubits:,} qubits in superposition")
+        self.logger.info(f"\n {n_qubits:,} qubits in superposition")
         self.logger.info(f"   Hilbert space: 2^{n_qubits}")
         self.logger.info(f"   FULL MOONSHINE MANIFOLD UTILIZED")
         
@@ -703,7 +703,7 @@ class ValidationSuite:
         
         stats = self.lattice.get_statistics()
         
-        # Check σ range
+        # Check  range
         sigma_valid = 0 <= stats['sigma_min'] and stats['sigma_max'] < 8.0
         
         # Check qubits
@@ -725,7 +725,7 @@ class ValidationSuite:
             'success': sigma_valid and qubits_valid and normalization_valid
         }
         
-        self.logger.info(f"  σ-range valid: {sigma_valid}")
+        self.logger.info(f"  -range valid: {sigma_valid}")
         self.logger.info(f"  Qubits valid: {qubits_valid}")
         self.logger.info(f"  Normalization valid: {normalization_valid}")
         
@@ -772,7 +772,7 @@ class ValidationSuite:
         all_passed = lattice_ok and quantum_ok
         
         self.logger.info(f"\n{'='*80}")
-        self.logger.info(f"VALIDATION: {'✅ PASSED' if all_passed else '❌ FAILED'}")
+        self.logger.info(f"VALIDATION: {' PASSED' if all_passed else ' FAILED'}")
         self.logger.info(f"{'='*80}\n")
         
         return all_passed
