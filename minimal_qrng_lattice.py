@@ -48,20 +48,32 @@ class QuantumRandomGenerator:
     Atmospheric quantum random number generator using Random.org.
     
     NO numpy.random - only true quantum randomness from atmospheric noise.
+    Includes rate limiting to avoid 503 errors.
     """
     
     def __init__(self):
         self.cache: List[float] = []
         self.cache_hits = 0
         self.api_calls = 0
+        self.last_api_call_time = 0
+        self.min_delay_between_calls = 0.2  # 200ms minimum between API calls
         
     def fetch_qrng_batch(self, n: int = 1000) -> List[int]:
         """
         Fetch batch of quantum random integers from Random.org.
         
         Returns integers in range [0, 1000000] for high precision.
+        Includes rate limiting to avoid 503 errors.
         """
+        # Rate limiting: wait if we called too recently
+        current_time = time.time()
+        time_since_last_call = current_time - self.last_api_call_time
+        if time_since_last_call < self.min_delay_between_calls:
+            sleep_time = self.min_delay_between_calls - time_since_last_call
+            time.sleep(sleep_time)
+        
         self.api_calls += 1
+        self.last_api_call_time = time.time()
         
         params = {
             'num': min(n, 10000),  # Max 10k per request
@@ -83,13 +95,26 @@ class QuantumRandomGenerator:
             logger.info(f"  ✓ Fetched {len(integers):,} QRNG values from Random.org")
             return integers
             
+        except requests.exceptions.HTTPError as e:
+            if "503" in str(e):
+                logger.warning(f"  ⚠ Random.org quota exceeded (503) - using deterministic fallback")
+            else:
+                logger.error(f"  ✗ Random.org API error: {e}")
+            logger.warning("  ⚠ Using time-seeded LCG (deterministic, NOT quantum!)")
         except Exception as e:
-            logger.error(f"  ✗ Random.org API error: {e}")
-            logger.warning("  ⚠ CRITICAL: Falling back to time-based seed (NOT quantum!)")
-            # Emergency fallback (NOT quantum, but better than crashing)
-            import time
-            seed = int((time.time() * 1000000) % 1000000)
-            return [(seed + i * 1664525) % 1000000 for i in range(n)]
+            logger.error(f"  ✗ Random.org connection error: {e}")
+            logger.warning("  ⚠ Using time-seeded LCG (deterministic, NOT quantum!)")
+        
+        # Deterministic fallback (Linear Congruential Generator)
+        # NOT quantum, but cryptographically better than simple counter
+        seed = int((time.time() * 1000000) % 2**32)
+        a, c, m = 1664525, 1013904223, 2**32  # Numerical Recipes LCG
+        values = []
+        x = seed
+        for _ in range(n):
+            x = (a * x + c) % m
+            values.append((x % 1000001))
+        return values
     
     def uniform(self, low: float = 0.0, high: float = 1.0) -> float:
         """Generate quantum random float in [low, high)"""

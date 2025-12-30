@@ -534,7 +534,11 @@ def initialize_lattice():
                 
                 STATE.add_log("", "info")
                 STATE.add_log("✓ Lattice initialization complete!", "info")
-                STATE.add_log(f"  Total qubits: {len(lattice.pseudoqubits):,}", "info")
+                # Minimal lattice: physical_qubits only, not pseudoqubits
+                physical_count = len(lattice.physical_qubits)
+                total_count = physical_count * 3  # Physical + virtual + inverse-virtual
+                STATE.add_log(f"  Physical qubits: {physical_count:,} (stored)", "info")
+                STATE.add_log(f"  Total qubits: {total_count:,} (with virtual)", "info")
                 STATE.add_log(f"  Total triangles: {len(lattice.triangles):,}", "info")
                 STATE.add_log(f"  Apex triangles: {len(STATE.apex_triangles)}", "info")
                 STATE.add_log("", "info")
