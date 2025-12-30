@@ -81,6 +81,15 @@ try:
     LATTICE_BUILDER_AVAILABLE = True
 except ImportError:
     LATTICE_BUILDER_AVAILABLE = False
+
+
+# Real-time experiment runner
+try:
+    from experiment_runner import QFTRunner, QuantumAdvantageRunner, generate_experiment_stream
+    EXPERIMENT_RUNNER_AVAILABLE = True
+except ImportError:
+    EXPERIMENT_RUNNER_AVAILABLE = False
+
     print("WARNING: minimal_qrng_lattice not found - will use mock")
 
 # Configure logging
@@ -1276,6 +1285,62 @@ def health():
 # ============================================================================
 # MAIN
 # ============================================================================
+
+
+# ============================================================================
+# REAL-TIME EXPERIMENT STREAMING (SSE)
+# ============================================================================
+
+@app.route('/api/stream-qft')
+def stream_qft():
+    """Stream QFT experiment output in real-time using Server-Sent Events"""
+    if not EXPERIMENT_RUNNER_AVAILABLE:
+        return jsonify({'error': 'Experiment runner not available'}), 503
+    
+    if not STATE.lattice:
+        return jsonify({'error': 'Lattice not initialized'}), 503
+    
+    def run_qft_stream():
+        runner = QFTRunner(STATE.db_path)
+        n_qubits = request.args.get('n_qubits', None)
+        if n_qubits:
+            n_qubits = int(n_qubits)
+        
+        result = runner.run_qft(n_qubits)
+        return result
+    
+    return Response(
+        generate_experiment_stream(run_qft_stream),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache',
+            'X-Accel-Buffering': 'no'
+        }
+    )
+
+@app.route('/api/stream-advantage')
+def stream_advantage():
+    """Stream Quantum Advantage demo output in real-time"""
+    if not EXPERIMENT_RUNNER_AVAILABLE:
+        return jsonify({'error': 'Experiment runner not available'}), 503
+    
+    if not STATE.lattice:
+        return jsonify({'error': 'Lattice not initialized'}), 503
+    
+    def run_advantage_stream():
+        runner = QuantumAdvantageRunner(STATE.db_path)
+        result = runner.run_advantage_demo()
+        return result
+    
+    return Response(
+        generate_experiment_stream(run_advantage_stream),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache',
+            'X-Accel-Buffering': 'no'
+        }
+    )
+
 
 if __name__ == '__main__':
     # Force stdout to stderr for Render visibility
