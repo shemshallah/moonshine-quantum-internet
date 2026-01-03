@@ -39,7 +39,7 @@ print("="*80)
 # CONFIGURATION
 # ════════════════════════════════════════════════════════════════════════════
 
-QBRAID_API_KEY = "qntfroj8dqkqpe3bznzbkcugqlpc8n"
+QBRAID_API_KEY = ""
 RIGETTI_DEVICE = 'rigetti_ankaa_3'
 
 SHOTS_PER_LETTER_ANKAA = 10
