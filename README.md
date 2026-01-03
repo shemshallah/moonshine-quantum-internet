@@ -1,6 +1,6 @@
-# Moonshine Quantum Internet v3.5
+# Moonshine Quantum Internet, Manifold Routing, Distributed Computing, and So much more.
 
-World record geometric quantum computing on 196,883-node Moonshine manifold. Tested between Rigetti Ankaa-3 and aer successfully. Data and code is in /proofs-progs/
+World record geometric quantum computing on 196,883-node Moonshine manifold. Tested between Rigetti Ankaa-3 and Aer successfully. Data and code is in /proofs-progs/
 
 Run lattice_builder_python.py for moonshine.db, connect with hardware and its supplies genuine quantumness to the lattice(if it isn't already a quantum-classical interface as is...)
 
